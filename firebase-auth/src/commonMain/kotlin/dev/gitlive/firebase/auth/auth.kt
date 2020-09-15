@@ -18,28 +18,69 @@ expect fun Firebase.auth(app: FirebaseApp): FirebaseAuth
 expect class FirebaseAuth {
     val currentUser: FirebaseUser?
     val authStateChanged: Flow<FirebaseUser?>
-    suspend fun sendPasswordResetEmail(email: String)
-    suspend fun signInWithEmailAndPassword(email: String, password: String): AuthResult
+    val idTokenChanged: Flow<FirebaseUser?>
+    var languageCode: String
+    suspend fun applyActionCode(code: String)
+    suspend fun checkActionCode(code: String): ActionCodeResult
+    suspend fun confirmPasswordReset(code: String, newPassword: String)
     suspend fun createUserWithEmailAndPassword(email: String, password: String): AuthResult
+    suspend fun fetchSignInMethodsForEmail(email: String): SignInMethodQueryResult
+    suspend fun sendPasswordResetEmail(email: String, actionCodeSettings: ActionCodeSettings? = null)
+    suspend fun sendSignInLinkToEmail(email: String, actionCodeSettings: ActionCodeSettings)
+    suspend fun signInWithEmailAndPassword(email: String, password: String): AuthResult
     suspend fun signInWithCustomToken(token: String): AuthResult
     suspend fun signInAnonymously(): AuthResult
     suspend fun signInWithCredential(authCredential: AuthCredential): AuthResult
     suspend fun signOut()
+    suspend fun updateCurrentUser(user: FirebaseUser)
+    suspend fun verifyPasswordResetCode(code: String): String
 }
 
 expect class AuthResult {
     val user: FirebaseUser?
 }
 
-expect class FirebaseUser {
-    val uid: String
-    val displayName: String?
-    val email: String?
-    val phoneNumber: String?
-    val isAnonymous: Boolean
-    suspend fun delete()
-    suspend fun reload()
-    suspend fun sendEmailVerification()
+expect class ActionCodeResult {
+    val operation: Operation
+    fun <T, A: ActionCodeDataType<T>> getData(type: A): T?
+}
+
+expect class SignInMethodQueryResult {
+    val signInMethods: List<String>
+}
+
+enum class Operation {
+    PasswordReset,
+    VerifyEmail,
+    RecoverEmail,
+    Error,
+    SignInWithEmailLink,
+    VerifyBeforeChangeEmail,
+    RevertSecondFactorAddition
+}
+
+sealed class ActionCodeDataType<T> {
+    object Email : ActionCodeDataType<String>()
+    object PreviousEmail : ActionCodeDataType<String>()
+    object MultiFactor : ActionCodeDataType<MultiFactorInfo>()
+}
+
+expect class ActionCodeSettings {
+    class Builder {
+        fun setAndroidPackageName(androidPackageName: String, installIfNotAvailable: Boolean, minimumVersion: String?): Builder
+        fun setDynamicLinkDomain(dynamicLinkDomain: String): Builder
+        fun setHandleCodeInApp(canHandleCodeInApp: Boolean): Builder
+        fun setIOSBundleId(iOSBundleId: String): Builder
+        fun setUrl(url: String): Builder
+        fun build(): ActionCodeSettings
+    }
+
+    val canHandleCodeInApp: Boolean
+    val androidInstallApp: Boolean
+    val androidMinimumVersion: String?
+    val androidPackageName: String?
+    val iOSBundle: String?
+    val url: String
 }
 
 expect open class FirebaseAuthException : FirebaseException
@@ -47,13 +88,7 @@ expect class FirebaseAuthActionCodeException : FirebaseAuthException
 expect class FirebaseAuthEmailException : FirebaseAuthException
 expect class FirebaseAuthInvalidCredentialsException : FirebaseAuthException
 expect class FirebaseAuthInvalidUserException : FirebaseAuthException
+expect class FirebaseAuthMultiFactorException: FirebaseAuthException
 expect class FirebaseAuthRecentLoginRequiredException : FirebaseAuthException
 expect class FirebaseAuthUserCollisionException : FirebaseAuthException
 expect class FirebaseAuthWebException : FirebaseAuthException
-
-expect class AuthCredential
-
-expect object EmailAuthProvider{
-    fun credentialWithEmail(email: String, password: String): AuthCredential
-}
-
