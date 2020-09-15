@@ -226,7 +226,7 @@ subprojects {
 
         repositories {
             maven {
-                url = uri("https://api.bintray.com/maven/stevesoltys/maven/firebase-kotlin-sdk/;publish=1")
+                url = uri("https://api.bintray.com/maven/stevesoltys/maven/firebase-kotlin-sdk")
                 credentials {
                     username = project.findProperty("bintrayUsername") as String? ?: System.getenv("bintrayUsername")
                     password = project.findProperty("bintrayKey") as String? ?: System.getenv("bintrayKey")
