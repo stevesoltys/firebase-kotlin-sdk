@@ -33,7 +33,5 @@ jobs:
         with:
           arguments: publish
         env:
-          sonatypeUsername: ${{ secrets.SONATYPEUSERNAME }}
-          sonatypePassword: ${{ secrets.SONATYPEPASSWORD }}
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_PRIVATE_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.PASSPHRASE }}
+          bintrayUsername: ${{ secrets.BINTRAY_USER }}
+          bintrayKey: ${{ secrets.BINTRAY_KEY }}

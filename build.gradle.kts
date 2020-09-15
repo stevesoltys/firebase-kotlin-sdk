@@ -220,17 +220,16 @@ subprojects {
     }
 
     apply(plugin="maven-publish")
-    apply(plugin="signing")
 
 
     configure<PublishingExtension> {
 
         repositories {
             maven {
-                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+                url = uri("https://api.bintray.com/maven/stevesoltys/maven/firebase-kotlin-sdk/;publish=1")
                 credentials {
-                    username = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypeUsername")
-                    password = project.findProperty("sonatypePassword") as String? ?: System.getenv("sonatypePassword")
+                    username = project.findProperty("bintrayUsername") as String? ?: System.getenv("bintrayUsername")
+                    password = project.findProperty("bintrayKey") as String? ?: System.getenv("bintrayKey")
                 }
             }
         }
