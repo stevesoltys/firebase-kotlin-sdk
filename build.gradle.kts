@@ -1,4 +1,3 @@
-import de.undercouch.gradle.tasks.download.Download
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
@@ -43,10 +42,10 @@ tasks {
 
 subprojects {
 
-    group = "dev.gitlive"
+    group = "com.stevesoltys"
 
-    apply(plugin="com.adarshr.test-logger")
-    
+    apply(plugin = "com.adarshr.test-logger")
+
     repositories {
         mavenLocal()
         mavenCentral()
@@ -56,15 +55,23 @@ subprojects {
 
 
     tasks.withType<Sign>().configureEach {
-        onlyIf { !project.gradle.startParameter.taskNames.contains("publishToMavenLocal")
-            }
+        onlyIf {
+            !project.gradle.startParameter.taskNames.contains("publishToMavenLocal")
+        }
     }
-    
+
 
     tasks {
 
         val updateVersion by registering(Exec::class) {
-            commandLine("npm", "--allow-same-version", "--prefix", projectDir, "version", "${project.property("${project.name}.version")}")
+            commandLine(
+                "npm",
+                "--allow-same-version",
+                "--prefix",
+                projectDir,
+                "version",
+                "${project.property("${project.name}.version")}"
+            )
         }
 
         val updateDependencyVersion by registering(Copy::class) {
@@ -72,8 +79,14 @@ subprojects {
             val from = file("package.json")
             from.writeText(
                 from.readText()
-                    .replace("firebase-common\": \"([^\"]+)".toRegex(), "firebase-common\": \"${project.property("firebase-common.version")}")
-                    .replace("firebase-app\": \"([^\"]+)".toRegex(), "firebase-app\": \"${project.property("firebase-app.version")}")
+                    .replace(
+                        "firebase-common\": \"([^\"]+)".toRegex(),
+                        "firebase-common\": \"${project.property("firebase-common.version")}"
+                    )
+                    .replace(
+                        "firebase-app\": \"([^\"]+)".toRegex(),
+                        "firebase-app\": \"${project.property("firebase-app.version")}"
+                    )
             )
         }
 
@@ -96,7 +109,8 @@ subprojects {
         val copyJS by registering {
             mustRunAfter("unzipJar", "copyPackageJson")
             doLast {
-                val from = File("$buildDir/classes/kotlin/js/main/${rootProject.name}-${project.name}.js")
+                val from =
+                    File("$buildDir/classes/kotlin/js/main/${rootProject.name}-${project.name}.js")
                 val into = File("$buildDir/node_module/${project.name}.js")
                 into.createNewFile()
                 into.writeText(
@@ -125,7 +139,7 @@ subprojects {
         val publishToNpm by creating(Exec::class) {
             workingDir("$buildDir/node_module")
             isIgnoreExitValue = true
-            if(Os.isFamily(Os.FAMILY_WINDOWS)) {
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 commandLine("cmd", "/c", "npm publish")
             } else {
                 commandLine("npm", "publish")
@@ -184,9 +198,9 @@ subprojects {
 //        )
 //    }
 
-    afterEvaluate  {
+    afterEvaluate {
         // create the projects node_modules if they don't exist
-        if(!File("$buildDir/node_module").exists()) {
+        if (!File("$buildDir/node_module").exists()) {
             mkdir("$buildDir/node_module")
         }
 
@@ -216,64 +230,22 @@ subprojects {
             "androidAndroidTestImplementation"("androidx.test:runner:1.2.0")
         }
 
-
     }
 
-    apply(plugin="maven-publish")
-
+    apply(plugin = "maven-publish")
 
     configure<PublishingExtension> {
 
-        repositories {
-            maven {
-                url = uri("https://api.bintray.com/maven/stevesoltys/maven/firebase-kotlin-sdk")
-                credentials {
-                    username = project.findProperty("bintrayUsername") as String? ?: System.getenv("bintrayUsername")
-                    password = project.findProperty("bintrayKey") as String? ?: System.getenv("bintrayKey")
-                }
+        repositories.maven("https://api.bintray.com/maven/stevesoltys/maven/firebase-kotlin-sdk") {
+            name = "bintray"
+
+            credentials {
+                username = project.findProperty("bintrayUsername") as String?
+                    ?: System.getenv("bintrayUsername")
+                password =
+                    project.findProperty("bintrayKey") as String? ?: System.getenv("bintrayKey")
             }
         }
-
-        publications.all {
-            this as MavenPublication
-
-            pom {
-                name.set("firebase-kotlin-sdk")
-                description.set("The Firebase Kotlin SDK is a Kotlin-first SDK for Firebase. It's API is similar to the Firebase Android SDK Kotlin Extensions but also supports multiplatform projects, enabling you to use Firebase directly from your common source targeting iOS, Android or JS.")
-                url.set("https://github.com/GitLiveApp/firebase-kotlin-sdk")
-                inceptionYear.set("2019")
-
-                scm {
-                    url.set("https://github.com/GitLiveApp/firebase-kotlin-sdk")
-                    connection.set("scm:git:https://github.com/GitLiveApp/firebase-kotlin-sdk.git")
-                    developerConnection.set("scm:git:https://github.com/GitLiveApp/firebase-kotlin-sdk.git")
-                    tag.set("HEAD")
-                }
-
-                issueManagement {
-                    system.set("GitHub Issues")
-                    url.set("https://github.com/GitLiveApp/firebase-kotlin-sdk/issues")
-                }
-
-                developers {
-                    developer {
-                        name.set("Nicholas Bransby-Williams")
-                        email.set("nbransby@gmail.com")
-                    }
-                }
-
-                licenses {
-                    license {
-                        name.set("The Apache Software License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                        distribution.set("repo")
-                        comments.set("A business-friendly OSS license")
-                    }
-                }
-
-            }
-        }
-
     }
 
 }
